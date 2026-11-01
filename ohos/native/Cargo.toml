@@ -1,0 +1,23 @@
+[package]
+name = "wasmer_sdk_ohos"
+version = "0.19.1"
+edition = "2021"
+description = "HarmonyOS Node-API bridge for the Wasmer SDK core"
+license-file = "../LICENSE"
+publish = false
+
+[lib]
+name = "wasmer_sdk_ohos"
+crate-type = ["cdylib"]
+
+[dependencies]
+ctor = "1"
+napi = { version = "3", default-features = false, features = ["napi8", "tokio_rt"] }
+napi-derive = "3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["io-util", "sync"] }
+wasmer-sdk = { path = "../vendor/wasmer-sdk-rust", default-features = false, features = ["napi-v8"] }
+
+[build-dependencies]
+napi-build = "2"

@@ -1,0 +1,31 @@
+[workspace]
+members = [
+    "native",
+    "vendor/wasmer-sdk-rust",
+]
+exclude = [
+    "vendor/perf-event-open-sys",
+]
+resolver = "2"
+
+[patch.crates-io]
+# HarmonyOS is a Linux target with a 32-bit ioctl request type; the upstream
+# crate selects the 64-bit branch for target_env = "ohos".
+perf-event-open-sys = { path = "vendor/perf-event-open-sys" }
+virtual-fs = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+virtual-mio = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+virtual-net = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+wasmer = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+wasmer-c-api-imports = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+wasmer-config = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+# The upstream crate resolves a prebuilt V8, which has no HarmonyOS build.
+# The vendored copy compiles its bundled QuickJS N-API engine for OHOS instead.
+wasmer-napi = { path = "vendor/wasmer-napi" }
+wasmer-package = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+wasmer-types = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+wasmer-wasix = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+wasmer-wasix-types = { git = "https://github.com/wasmerio/wasmer.git", rev = "5bd2b7d3182e816bd0ea330acc88e4e4733e167f" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

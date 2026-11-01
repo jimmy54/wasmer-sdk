@@ -1,0 +1,9 @@
+{
+  "name": "libwasmer_sdk_ohos.so",
+  "types": "./index.d.ts",
+  "version": "0.19.1",
+  "description": "Node-API bridge for the Wasmer SDK core",
+  "author": "Wasmer",
+  "license": "MIT",
+  "dependencies": {}
+}

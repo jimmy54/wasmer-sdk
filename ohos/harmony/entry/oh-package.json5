@@ -1,0 +1,11 @@
+{
+  "name": "entry",
+  "version": "0.19.1",
+  "description": "Wasmer SDK HarmonyOS demo",
+  "main": "",
+  "author": "Wasmer",
+  "license": "MIT",
+  "dependencies": {
+    "@wasmer/harmony": "file:../wasmer"
+  }
+}

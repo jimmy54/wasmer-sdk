@@ -1,0 +1,39 @@
+[package]
+name = "wasmer-sdk-uniffi"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+description = "UniFFI facade for wasmer-sdk"
+license-file = "LICENSE"
+repository = "https://github.com/wasmerio/wasmer-sdk"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["bindgen-cli"]
+
+[features]
+default = ["napi-v8"]
+sys = ["wasmer-sdk/sys"]
+napi-v8 = ["sys", "wasmer-sdk/napi-v8"]
+bindgen-cli = ["uniffi/cli"]
+
+[dependencies]
+tokio = { version = "1.49", features = ["io-util", "rt-multi-thread", "sync"] }
+uniffi = "0.32.0"
+wasmer-sdk = { path = "..", version = "=0.1.0", default-features = false }
+
+[dev-dependencies]
+futures = "0.3"
+tempfile = "3.23"
+wat = "1.244"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

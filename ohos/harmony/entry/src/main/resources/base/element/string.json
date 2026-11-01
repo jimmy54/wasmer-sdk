@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Wasmer SDK HarmonyOS demo"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Run WASI/WASIX packages with the Wasmer SDK"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Wasmer SDK"
+    }
+  ]
+}

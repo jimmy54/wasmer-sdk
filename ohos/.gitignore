@@ -1,0 +1,15 @@
+target/
+**/target/
+node_modules/
+oh_modules/
+.hvigor/
+.idea/
+.DS_Store
+*.hap
+*.har
+harmony/**/build/
+harmony/**/.preview/
+harmony/wasmer/libs/arm64-v8a/*.so
+harmony/entry/libs/
+harmony/local.properties
+native/tests/.wasmer/

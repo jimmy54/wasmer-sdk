@@ -1,0 +1,11 @@
+{
+  "name": "@wasmer/harmony",
+  "version": "0.19.1",
+  "description": "Wasmer SDK for HarmonyOS: run WASI/WASIX packages in a sandbox",
+  "main": "Index.ets",
+  "author": "Wasmer",
+  "license": "MIT",
+  "dependencies": {
+    "libwasmer_sdk_ohos.so": "file:./types/libwasmer_sdk_ohos"
+  }
+}
