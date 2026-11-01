@@ -51,7 +51,7 @@ struct EdgeHttpPage {
       const env: Record<string, string> = {};
       env["PORT"] = "8080";
       const network: NetworkPolicy = { mode: "host" };
-      const packages: string[] = ["wasmer/edgejs@0.2.0"];
+      const packages: string[] = ["wasmer/edgejs-quickjs@0.1.0"];
       const options: SandboxOptions = {
         packages: packages,
         files: files,

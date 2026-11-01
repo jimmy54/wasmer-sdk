@@ -17,6 +17,7 @@ repository.
 | Emulator install and launch | The unsigned HAP installs with `hdc install -r` and `EntryAbility` starts on the API 23 arm64 emulator. |
 | WASI guest on emulator | **Run hello.wasm** prints the greeting, arguments, environment, stdin echo, and the `/tmp` file round-trip, then reports exit status 0. |
 | Node.js guest on emulator | **Run Node.js example** loads `wasmer/edgejs-quickjs@0.1.0`, executes `/workspace/index.js`, and reports `Node exited with status 0`. |
+| Official examples on emulator | All five pages under **Official examples** run to completion: Python, multiple runtimes, Edge.js HTTP server, shell tools, and the interactive terminal (verified 2026-11-02). |
 
 Commands:
 
@@ -103,6 +104,35 @@ by the upstream SDK's `examples/edgejs_http.rs`.
 arguments, environment, and stdin, and reports exit status 0 after the `/tmp`
 file round-trip.
 
+### Official examples
+
+The **Official examples** entry on the home page opens a list whose pages mirror
+the upstream `js/examples` scripts and README snippets. Every page was driven
+through the emulator UI with `uitest`, and the ArkTS source lives in
+[`examples/arkts-pages`](../examples/arkts-pages) and
+`harmony/entry/src/main/ets/pages`.
+
+| Example | Upstream source | Captured result |
+| --- | --- | --- |
+| Python | `js/examples/python.mjs` | Status `Exited with status 0`, output `285` |
+| Multiple runtimes | `js/examples/multiple_runtimes.mjs` | Status `All runtimes completed`, output `hello from shell tools`, `hello from Python`, `hello from Edge.js`, `hello from PHP` |
+| Edge.js HTTP server | `js/examples/edgejs_http.mjs` | Status `Serving http://127.0.0.1:8080/`; the ArkUI `Web` component renders `hello from Edge.js on HarmonyOS` |
+| Shell tools | README shell-tools example | Status `Exited with status 0`, output `hello from 'HarmonyOS'`, `/workspace`, `done` |
+| Interactive terminal | README terminal example | `bash -i` starts as pid 1; `Send` echoes `hello from the terminal`; `Resize` reports `Resized to 120x40`; `Stop` reports `Stopped` |
+
+Two adjustments were required relative to the upstream snippets, both captured
+in the ArkTS pages:
+
+- **Ambiguous `echo`.** Loading `python/python` and `wasmer/edgejs-quickjs`
+  together makes a bare `command("echo")` fail with `COMMAND_AMBIGUOUS`,
+  because both packages ship `echo`. The page keeps the upstream sequence but
+  qualifies the shell call with `pythonPkg.command("echo")` (a `CommandRef`).
+  The vendored Rust `vendor/wasmer-sdk-rust/examples/multiple_runtimes.rs` still
+  uses the bare command and would need the same qualification with current
+  registry contents.
+- **Edge.js variant.** The pages use `wasmer/edgejs-quickjs@0.1.0` rather than
+  `wasmer/edgejs@0.2.0`; see the platform finding about host N-API below.
+
 ## Platform findings
 
 These were discovered while bringing the port up on the emulator and shape the
@@ -144,8 +174,6 @@ build:
 
 - Host networking (DNS/TCP) from WASIX guests on device, including registry
   downloads with `network: { mode: "host" }`.
-- `ports.onListen` / `ports.expose` with a guest HTTP server rendered in the
-  ArkUI `Web` component.
-- Long-running process/terminal behavior under HarmonyOS scheduling, and
-  repeated start/stop cycles for handle cleanup.
+- Long-running process/terminal behavior under HarmonyOS scheduling beyond the
+  first start/stop cycle, and repeated start/stop cycles for handle cleanup.
 - Physical HarmonyOS hardware; all results above are from the emulator.

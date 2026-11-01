@@ -1,4 +1,5 @@
 import { common } from "@kit.AbilityKit";
+import { router } from "@kit.ArkUI";
 import {
   Wasmer,
   Sandbox,
@@ -187,6 +188,14 @@ struct Index {
           .enabled(!this.busy)
           .onClick(() => {
             this.runNode();
+          })
+      }
+      .width("100%")
+
+      Row({ space: 10 }) {
+        Button("Official examples")
+          .onClick(() => {
+            router.pushUrl({ url: "pages/ExamplesPage" });
           })
       }
       .width("100%")

@@ -1,5 +1,6 @@
 import {
   Output,
+  PackageSource,
   Sandbox,
   SandboxOptions,
   Wasmer,
@@ -20,15 +21,19 @@ struct MultipleRuntimesPage {
     const wasmer: Wasmer = await Wasmer.create();
     let sandbox: Sandbox | null = null;
     try {
-      const packages: string[] = [
-        "python/python@=3.13.20",
-        "wasmer/edgejs@0.2.0",
+      const pythonPkg = await wasmer.packages.load("python/python@=3.13.20");
+      const packages: PackageSource[] = [
+        pythonPkg,
+        "wasmer/edgejs-quickjs@0.1.0",
         "php/php-32",
       ];
       const options: SandboxOptions = { packages: packages };
       sandbox = await wasmer.sandboxes.create(options);
       const results: string[] = [];
-      const shell: Output = await sandbox.command("echo", ["hello from shell tools"]).run();
+      // python and edgejs-quickjs both ship `echo`, so qualify the command.
+      const shell: Output = await sandbox
+        .command(pythonPkg.command("echo"), ["hello from shell tools"])
+        .run();
       results.push(shell.text().trim());
       const python: Output = await sandbox
         .command("python", ["-c", "print('hello from Python')"])

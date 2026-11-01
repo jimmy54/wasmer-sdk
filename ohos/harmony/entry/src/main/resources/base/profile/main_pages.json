@@ -1,5 +1,11 @@
 {
   "src": [
-    "pages/Index"
+    "pages/Index",
+    "pages/ExamplesPage",
+    "pages/PythonPage",
+    "pages/BashPage",
+    "pages/MultipleRuntimesPage",
+    "pages/EdgeHttpPage",
+    "pages/TerminalPage"
   ]
 }
