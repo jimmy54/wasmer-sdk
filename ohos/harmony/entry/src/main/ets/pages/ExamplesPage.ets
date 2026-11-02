@@ -32,6 +32,11 @@ const EXAMPLES: ExampleEntry[] = [
     upstream: "README terminal example",
     page: "pages/TerminalPage",
   },
+  {
+    title: "Pi coding agent",
+    upstream: "packages/pi (wasmer/pi@0.87.1)",
+    page: "pages/PiPage",
+  },
 ];
 
 @Entry

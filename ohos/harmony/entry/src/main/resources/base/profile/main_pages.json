@@ -6,6 +6,7 @@
     "pages/BashPage",
     "pages/MultipleRuntimesPage",
     "pages/EdgeHttpPage",
-    "pages/TerminalPage"
+    "pages/TerminalPage",
+    "pages/PiPage"
   ]
 }

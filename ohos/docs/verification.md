@@ -18,6 +18,7 @@ repository.
 | WASI guest on emulator | **Run hello.wasm** prints the greeting, arguments, environment, stdin echo, and the `/tmp` file round-trip, then reports exit status 0. |
 | Node.js guest on emulator | **Run Node.js example** loads `wasmer/edgejs-quickjs@0.1.0`, executes `/workspace/index.js`, and reports `Node exited with status 0`. |
 | Official examples on emulator | All five pages under **Official examples** run to completion: Python, multiple runtimes, Edge.js HTTP server, shell tools, and the interactive terminal (verified 2026-11-02). |
+| Pi coding agent on emulator | `wasmer/pi@0.87.1` boots through `wasmer/edgejs-quickjs@0.2.5`: `pi --version` prints `0.87.1` and `pi --help` exits 0 with the full tool list. The default `wasmer/edgejs@0.2.4` path and a complete model-backed agent turn are blocked by engine limitations (see below). |
 
 Commands:
 
@@ -133,6 +134,32 @@ in the ArkTS pages:
 - **Edge.js variant.** The pages use `wasmer/edgejs-quickjs@0.1.0` rather than
   `wasmer/edgejs@0.2.0`; see the platform finding about host N-API below.
 
+### Pi coding agent
+
+`wasmer/pi@0.87.1` is the official Pi coding agent package. Its `wasmer.toml`
+pins `wasmer/edgejs@=0.2.4`, so the natural `pi` command takes the same failing
+Edge.js path as the other examples. The **Pi coding agent** page therefore
+offers three probes:
+
+| Probe | Result |
+| --- | --- |
+| `pi` (Edge.js 0.2.4) | Fails before the CLI starts: `Failed to execute builtin 'internal/bootstrap/realm'` (`Node.js v24.13.2`) |
+| `pi --version` via `wasmer/edgejs-quickjs@0.2.5` | Exit 0, output `0.87.1` |
+| `pi --help` via `wasmer/edgejs-quickjs@0.2.5` | Exit 0; lists the read, bash, edit, write, grep, find, and ls tools plus all provider flags |
+
+Running Pi against a local OpenAI-compatible streaming fixture gets further:
+the request reaches `POST /v1/chat/completions` and the fixture streams chunks,
+and a standalone `fetch` probe against the same guest server succeeds
+(`GET /health` → 200, streamed `POST` returns a readable body). Pi's provider
+client then fails with `cannot read property 'headers' of undefined`, so a
+complete model-backed tool loop has not been observed on the QuickJS engine.
+
+The Pi page writes `models.json`, `auth.json`, a local model server
+(`model-server.mjs`), and test files into `/workspace`, starts the server with
+`edge`, exposes port 8787, and runs the CLI with
+`--offline --provider wasmer-test --model test --tools read,write,edit,bash,grep,find,ls -p`.
+No provider credentials are used.
+
 ## Platform findings
 
 These were discovered while bringing the port up on the emulator and shape the
@@ -163,17 +190,23 @@ build:
   compiles both the engine and the bridge with hidden visibility. Without this,
   the module's own `napi_register_module_v1` calls bind to the embedded engine
   and the loader crashes while registering the module.
-- **Host-NAPI Edge.js is not usable on this engine.** The registry variant
-  `wasmer/edgejs@0.2.0` expects a V8-compatible host N-API and fails while
-  bootstrapping Node (`Failed to execute builtin 'internal/bootstrap/realm'`)
-  under the QuickJS host engine. The embedded variant
-  `wasmer/edgejs-quickjs@0.1.0` works and is what the demo and upstream
-  `examples/edgejs_http.rs` use.
+- **Host-NAPI Edge.js is not usable on this engine.** The registry variants
+  `wasmer/edgejs@0.2.0` and `@0.2.4` expect a V8-compatible host N-API and fail
+  while bootstrapping Node (`Failed to execute builtin
+  'internal/bootstrap/realm'`) under the QuickJS host engine. This also blocks
+  the default `wasmer/pi` command, which depends on Edge.js 0.2.4. The embedded
+  variant `wasmer/edgejs-quickjs` works; examples use `@0.1.0` (resolved as
+  0.1.4) and the Pi page uses `@0.2.5`, whose newer QuickJS engine can load the
+  Pi bundle. Even there, Pi's provider client fails after the model response,
+  so a full agent turn remains unverified.
 
 ## Not yet verified
 
-- Host networking (DNS/TCP) from WASIX guests on device, including registry
-  downloads with `network: { mode: "host" }`.
+- Outbound internet (DNS/TCP) from WASIX guests on device, including registry
+  downloads with `network: { mode: "host" }` (guest-to-guest loopback through
+  `ports.expose` is verified).
+- A complete Pi agent turn with a model response and tool calls; the CLI boots
+  but its provider client fails on the QuickJS runtime.
 - Long-running process/terminal behavior under HarmonyOS scheduling beyond the
   first start/stop cycle, and repeated start/stop cycles for handle cleanup.
 - Physical HarmonyOS hardware; all results above are from the emulator.
