@@ -163,6 +163,7 @@ struct PiPage {
     try {
       const context = getContext(this) as common.UIAbilityContext;
       const serverScript = await context.resourceManager.getRawFileContent("model-server.mjs");
+      const fetchFix = await context.resourceManager.getRawFileContent("pi-fetch-fix.mjs");
       const loadOptions: PackageLoadOptions = {
         onProgress: (progress: PackageLoadProgress): void => {
           if (progress.download.percent !== null) {
@@ -178,11 +179,12 @@ struct PiPage {
         await wasmer.packages.load("wasmer/edgejs-quickjs@=0.2.5", loadOptions);
       const files: Record<string, FileContents> = {};
       files["model-server.mjs"] = new Uint8Array(serverScript);
+      files["pi-fetch-fix.mjs"] = new Uint8Array(fetchFix);
       files["hello.js"] = "console.log('Hello, Wasmer!');\n";
       files["probe.mjs"] =
         "const r = await fetch('http://127.0.0.1:8787/health');\n" +
         "console.log('PROBE', r.status, (await r.text()).trim());\n" +
-        "const p = await fetch('http://127.0.0.1:8787/v1/chat/completions', {\n" +
+        "const p = await fetch('http://127.0.0.1:8787/probe', {\n" +
         "  method: 'POST',\n" +
         "  headers: { 'content-type': 'application/json', authorization: 'Bearer test-only-not-a-secret' },\n" +
         "  body: JSON.stringify({ stream: true, messages: [], tools: [] }),\n" +
@@ -239,6 +241,7 @@ struct PiPage {
         "--model", "test",
         "--thinking", "off",
         "--tools", "read,write,edit,bash,grep,find,ls",
+        "--extension", "/workspace/pi-fetch-fix.mjs",
         "-p", "Exercise the workspace tools.",
       ];
       const result: Output = await sandbox.command(edge, args).run({ timeoutMs: 180000, check: false });

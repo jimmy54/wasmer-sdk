@@ -18,7 +18,7 @@ repository.
 | WASI guest on emulator | **Run hello.wasm** prints the greeting, arguments, environment, stdin echo, and the `/tmp` file round-trip, then reports exit status 0. |
 | Node.js guest on emulator | **Run Node.js example** loads `wasmer/edgejs-quickjs@0.1.0`, executes `/workspace/index.js`, and reports `Node exited with status 0`. |
 | Official examples on emulator | All five pages under **Official examples** run to completion: Python, multiple runtimes, Edge.js HTTP server, shell tools, and the interactive terminal (verified 2026-11-02). |
-| Pi coding agent on emulator | `wasmer/pi@0.87.1` boots through `wasmer/edgejs-quickjs@0.2.5`: `pi --version` prints `0.87.1` and `pi --help` exits 0 with the full tool list. The default `wasmer/edgejs@0.2.4` path and a complete model-backed agent turn are blocked by engine limitations (see below). |
+| Pi coding agent on emulator | `wasmer/pi@0.87.1` boots through `wasmer/edgejs-quickjs@0.2.5`: `pi --version` prints `0.87.1` and `pi --help` exits 0 with the full tool list. A complete model-backed agent turn also runs, using a `node:http`-based fetch extension to bypass Undici's incompatible global fetch: exit 0, final text `PI_AGENT_TOOLS_OK`, `pi-test/result.txt` = `after`, 8 model requests (see below). The default `wasmer/edgejs@0.2.4` path remains blocked by engine limitations. |
 
 Commands:
 
@@ -139,26 +139,39 @@ in the ArkTS pages:
 `wasmer/pi@0.87.1` is the official Pi coding agent package. Its `wasmer.toml`
 pins `wasmer/edgejs@=0.2.4`, so the natural `pi` command takes the same failing
 Edge.js path as the other examples. The **Pi coding agent** page therefore
-offers three probes:
+offers these probes:
 
 | Probe | Result |
 | --- | --- |
 | `pi` (Edge.js 0.2.4) | Fails before the CLI starts: `Failed to execute builtin 'internal/bootstrap/realm'` (`Node.js v24.13.2`) |
 | `pi --version` via `wasmer/edgejs-quickjs@0.2.5` | Exit 0, output `0.87.1` |
 | `pi --help` via `wasmer/edgejs-quickjs@0.2.5` | Exit 0; lists the read, bash, edit, write, grep, find, and ls tools plus all provider flags |
+| `Run agent turn (local model)` | Exit 0; final assistant text `PI_AGENT_TOOLS_OK`, `pi-test/result.txt` = `after`, 8 `POST /v1/chat/completions` requests |
 
-Running Pi against a local OpenAI-compatible streaming fixture gets further:
-the request reaches `POST /v1/chat/completions` and the fixture streams chunks,
-and a standalone `fetch` probe against the same guest server succeeds
-(`GET /health` → 200, streamed `POST` returns a readable body). Pi's provider
-client then fails with `cannot read property 'headers' of undefined`, so a
-complete model-backed tool loop has not been observed on the QuickJS engine.
+For the agent turn the page writes `models.json`, `auth.json`, `hello.js`, a
+local OpenAI-compatible streaming fixture (`model-server.mjs`), and
+`pi-fetch-fix.mjs` into `/workspace`, starts the fixture with `edge`, exposes
+port 8787, and runs the CLI on `edgejs-quickjs@0.2.5`:
 
-The Pi page writes `models.json`, `auth.json`, a local model server
-(`model-server.mjs`), and test files into `/workspace`, starts the server with
-`edge`, exposes port 8787, and runs the CLI with
-`--offline --provider wasmer-test --model test --tools read,write,edit,bash,grep,find,ls -p`.
-No provider credentials are used.
+```text
+--offline --verbose --provider wasmer-test --model test --thinking off \
+  --tools read,write,edit,bash,grep,find,ls \
+  --extension /workspace/pi-fetch-fix.mjs \
+  -p "Exercise the workspace tools."
+```
+
+No provider credentials are used; `auth.json` contains a fixture-only key. The
+fixture streams tool calls for read, write, edit, bash, grep, find, and ls, then
+a final answer, and logs each request to `model-requests.log`.
+
+The extension is required because Pi's `dist/core/http-dispatcher.js` creates an
+Undici 8.10.2 dispatcher and calls `undici.install()`, which replaces
+`globalThis.fetch` (and Headers/Response) with Undici's implementation. That
+fetch does not work in the ArkVM QuickJS guest, so Pi's provider client never
+receives a response and fails with `cannot read property 'headers' of
+undefined`. `pi-fetch-fix.mjs` overrides `globalThis.fetch` at module load with
+a small implementation over `node:http`/`node:https` (streaming body, abort
+signal, `text()`/`json()`); with it loaded, the complete agent loop runs.
 
 ## Platform findings
 
@@ -197,16 +210,16 @@ build:
   the default `wasmer/pi` command, which depends on Edge.js 0.2.4. The embedded
   variant `wasmer/edgejs-quickjs` works; examples use `@0.1.0` (resolved as
   0.1.4) and the Pi page uses `@0.2.5`, whose newer QuickJS engine can load the
-  Pi bundle. Even there, Pi's provider client fails after the model response,
-  so a full agent turn remains unverified.
+  Pi bundle. Pi's own `undici.install()` then replaces `globalThis.fetch` with
+  Undici's fetch, which does not work on this engine; the Pi page loads a
+  `node:http`/`node:https` fetch replacement (`pi-fetch-fix.mjs`) as an
+  extension, after which the full agent turn completes.
 
 ## Not yet verified
 
 - Outbound internet (DNS/TCP) from WASIX guests on device, including registry
   downloads with `network: { mode: "host" }` (guest-to-guest loopback through
-  `ports.expose` is verified).
-- A complete Pi agent turn with a model response and tool calls; the CLI boots
-  but its provider client fails on the QuickJS runtime.
+  `ports.expose` is verified, and the Pi fixture is reached over loopback).
 - Long-running process/terminal behavior under HarmonyOS scheduling beyond the
   first start/stop cycle, and repeated start/stop cycles for handle cleanup.
 - Physical HarmonyOS hardware; all results above are from the emulator.

@@ -22,11 +22,18 @@ const server = http.createServer(async (request, response) => {
     response.end("ok");
     return;
   }
+  if (request.url === "/probe") {
+    response.writeHead(200, { "content-type": "text/plain" });
+    response.end("probe-ok");
+    return;
+  }
   let body = "";
   for await (const chunk of request) {
     body += chunk;
   }
   const step = steps[requests++];
+  fs.appendFileSync("/workspace/model-requests.log",
+    "step " + (step === undefined ? "final" : step[0]) + "\n");
   response.writeHead(200, {
     "content-type": "text/event-stream",
     "cache-control": "no-cache",

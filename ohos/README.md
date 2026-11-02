@@ -23,7 +23,7 @@ ArkTS application
 | HAP packaging | Builds unsigned; contains the native library, `libc++_shared.so`, and demo guest |
 | Native functional tests | 16/16 passing on the host (macOS cdylib via Node-API) |
 | ArkTS compilation | Clean under the HarmonyOS 6.0 (API 20) strict compiler |
-| Emulator run | **Verified** on an API 23 arm64 emulator: WASI demo, Node.js (`wasmer/edgejs-quickjs@0.1.0`), all five upstream-style examples, and the official `wasmer/pi@0.87.1` CLI (boots through `edgejs-quickjs@0.2.5`); see [docs/verification.md](docs/verification.md) |
+| Emulator run | **Verified** on an API 23 arm64 emulator: WASI demo, Node.js (`wasmer/edgejs-quickjs@0.1.0`), all five upstream-style examples, and the official `wasmer/pi@0.87.1` coding agent — CLI boot plus a complete model-backed tool loop through `edgejs-quickjs@0.2.5`; see [docs/verification.md](docs/verification.md) |
 
 API parity details and intentional platform differences are documented in
 [docs/parity.md](docs/parity.md). Build, signing, and run instructions are in
