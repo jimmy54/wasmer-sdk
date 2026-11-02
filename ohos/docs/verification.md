@@ -162,7 +162,38 @@ port 8787, and runs the CLI on `edgejs-quickjs@0.2.5`:
 
 No provider credentials are used; `auth.json` contains a fixture-only key. The
 fixture streams tool calls for read, write, edit, bash, grep, find, and ls, then
-a final answer, and logs each request to `model-requests.log`.
+a final answer, and logs each request to `model-requests.log`. Captured on the
+emulator (re-run 2026-11-02):
+
+```text
+probe: PROBE 200 ok
+POST 200 body
+TEXT probe-ok
+
+requests:
+GET /health
+POST /probe
+POST /v1/chat/completions
+step read
+POST /v1/chat/completions
+step write
+POST /v1/chat/completions
+step edit
+POST /v1/chat/completions
+step bash
+POST /v1/chat/completions
+step grep
+POST /v1/chat/completions
+step find
+POST /v1/chat/completions
+step ls
+POST /v1/chat/completions
+step final
+
+PI_AGENT_TOOLS_OK
+
+pi-test/result.txt: after
+```
 
 The extension is required because Pi's `dist/core/http-dispatcher.js` creates an
 Undici 8.10.2 dispatcher and calls `undici.install()`, which replaces
